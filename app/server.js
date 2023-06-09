@@ -4,6 +4,9 @@ const cors = require("cors");
 const path = require("path");
 const createHttpError = require("http-errors");
 const { AllRoutes } = require("./router");
+const expressEjsLayouts = require("express-ejs-layouts");
+const session = require("express-session")
+const cookieParser = require("cookie-parser")
 
 module.exports = class Application {
   #APP = express();
@@ -12,6 +15,8 @@ module.exports = class Application {
     this.#PORT = port
     this.config();
     this.createServer();
+    this.initTemplateEngine();
+    this.initClientSession();
     this.initDataBase();
     this.routeHandler();
     this.errorHandler();
@@ -35,6 +40,25 @@ module.exports = class Application {
       console.log(error);
     }
   }
+  initTemplateEngine(){
+    this.#APP.use(expressEjsLayouts)
+    this.#APP.set("view engine" , "ejs")
+    this.#APP.set("views" , path.join(__dirname , ".." , 'views'))
+    this.#APP.set("layout" , "layout/main")
+    this.#APP.set("layout extractStyles" , true)
+    this.#APP.set("layout extractScripts" , true)
+  }
+  initClientSession(){
+    this.#APP.use(cookieParser("dsajdskandasjk!123iosandas"))
+    this.#APP.use(session({
+      secret: "dsajdskandasjk!123iosandas" ,
+      resave: true ,
+      saveUninitialized: true ,
+      cookie: {
+        secure: true
+      }
+    }))
+  }
   initDataBase() {}
   errorHandler() {
     this.#APP.use((req, res, next) => {
@@ -46,7 +70,7 @@ module.exports = class Application {
       const msg = error.message || serverError.message;
       return res.status(statusCode).json({
         statusCode,
-        errros: {
+        errors: {
           msg,
         },
       });
